@@ -43,7 +43,7 @@ class PulseAudio:
 
     def write(self, sample):
         error = ctypes.c_int(0)
-        if self._libpulse.pa_simple_write(self._stream, bytes(sample), len(sample), error):
+        if self._libpulse.pa_simple_write(self._stream, sample, len(sample), error):
             raise PulseAudioError('could not write pulseaudio stream')
 
     def free(self):
