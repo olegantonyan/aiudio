@@ -42,12 +42,16 @@ class PulseAudio:
             raise PulseAudioError('could not create pulseaudio stream: {0}'.format(self._libpulse.strerror(ctypes.byref(error))))
 
     def write(self, sample):
+        data = bytes(sample)
         error = ctypes.c_int(0)
-        if self._libpulse.pa_simple_write(self._stream, sample, len(sample), error):
+        if self._libpulse.pa_simple_write(self._stream, data, len(data), error):
             raise PulseAudioError('could not write pulseaudio stream')
 
-    def free(self):
+    def drain(self):
         error = ctypes.c_int(0)
         if self._libpulse.pa_simple_drain(self._stream, ctypes.byref(error)):
             raise PulseAudioError('could not simple drain')
+
+    def free(self):
+        self.drain()
         self._libpulse.pa_simple_free(self._stream)
