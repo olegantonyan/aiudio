@@ -18,12 +18,12 @@ class PulseAudio:
 
     # pa_sample_spec = struct_pa_sample_spec
 
-    def __init__(self):
+    def __init__(self, sample_date=44100, channels=2):
         self._libpulse = ctypes.cdll.LoadLibrary('libpulse-simple.so.0')
 
         sample_spec = self.struct_pa_sample_spec()
-        sample_spec.rate = 44100
-        sample_spec.channels = 1
+        sample_spec.rate = sample_date
+        sample_spec.channels = channels
         sample_spec.format = 3  # PA_SAMPLE_S16LE
 
         error = ctypes.c_int(0)
@@ -42,7 +42,7 @@ class PulseAudio:
             raise PulseAudioError('could not create pulseaudio stream: {0}'.format(self._libpulse.strerror(ctypes.byref(error))))
 
     def write(self, sample):
-        data = bytes(sample)
+        data = self._convert_sample(sample)
         error = ctypes.c_int(0)
         if self._libpulse.pa_simple_write(self._stream, data, len(data), error):
             raise PulseAudioError('could not write pulseaudio stream')
@@ -55,3 +55,10 @@ class PulseAudio:
     def free(self):
         self.drain()
         self._libpulse.pa_simple_free(self._stream)
+
+    def _convert_sample(self, sample):
+        data = []
+        for i in sample:
+            data.append(i & 0xFF)
+            data.append(i >> 8 & 0xFF)
+        return bytes(data)
